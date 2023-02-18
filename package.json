@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next export -o verseshoe-netlify/",
+    "build": "next build",
     "merkletree": "node merkletree.js",
     "start": "next start"
   },
