@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build && next export -o verseshoe-netlify/",
     "merkletree": "node merkletree.js",
-    "start": "next start",
-    "lint": "next lint",
-    "export": "next export"
+    "start": "next start"
   },
   "dependencies": {
     "@heroicons/react": "^2.0.12",
