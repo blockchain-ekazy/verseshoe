@@ -212,7 +212,7 @@ const WhitelistChecker = ({ onNotify }) => {
       ) : (
         ""
       )}
-      {page == 1 ? <wWhtielisted /> : ""}
+      {page == 1 ? <Whtielisted /> : ""}
       {page == 2 ? <NotWhtielisted /> : ""}
     </>
   );
