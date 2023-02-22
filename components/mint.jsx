@@ -344,8 +344,8 @@ const Mint = ({ onNotify }) => {
             clientId="21824951-6cbc-4930-9478-c58df4a163bd"
             mintConfig={{
               type: "erc-721",
-              // totalPrice: "0.04",
-              totalPrice: totalPrice.toString(),
+              totalPrice: "0.04",
+              // totalPrice: totalPrice.toString(),
               _mintAmount: "1",
             }}
             environment="staging"
