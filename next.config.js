@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   env: {
-    CONTRACT_ADDRESS: "0x65A3851aBcE850Dad4805fBA51F3A3A313CA04E0",
+    CONTRACT_ADDRESS: "0x4bDd246a240FB5db82Bd29B1b8067280bfDf3856",
     NETWORK: 0x5,
   },
   exportPathMap: function () {

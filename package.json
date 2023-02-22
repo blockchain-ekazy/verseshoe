@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@crossmint/client-sdk-react-ui": "^0.2.2-alpha.0",
     "@heroicons/react": "^2.0.12",
     "@netlify/plugin-nextjs": "^4.30.4",
     "@next/font": "^13.0.7",

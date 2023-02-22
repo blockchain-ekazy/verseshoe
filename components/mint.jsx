@@ -5,8 +5,9 @@ import { useDispatch, useSelector } from "react-redux";
 import VerseshoeAbi from "../data/abi/verseshoe.json";
 import whitelists from "../data/wallets/whitelist.json";
 import { updateSignerAddress } from "../redux/counterSlice";
+import { CrossmintPayButton } from "@crossmint/client-sdk-react-ui";
 
-const keccak256 = require('keccak256');
+const keccak256 = require("keccak256");
 
 const Mint = ({ onNotify }) => {
   const { signerAddress } = useSelector((state) => state.counter);
@@ -22,7 +23,8 @@ const Mint = ({ onNotify }) => {
   const [quantity, setQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
   const [seconds, setSeconds] = useState(38);
- 
+  const [crossmintProof, setcrossmintProof] = useState();
+
   const getContractInformation = async () => {
     // Declare provider
     const provider = new ethers.providers.Web3Provider(
@@ -31,7 +33,11 @@ const Mint = ({ onNotify }) => {
     );
 
     // The Contract object
-    const contract = new ethers.Contract(contractAddress, VerseshoeAbi, provider);
+    const contract = new ethers.Contract(
+      contractAddress,
+      VerseshoeAbi,
+      provider
+    );
 
     // Read max supply
     let maxSupply = await contract.maxSupply();
@@ -81,10 +87,22 @@ const Mint = ({ onNotify }) => {
       onNotify("You are not on the Whitelist!");
     } else {
       // The Contract object
-      const contract = new ethers.Contract(contractAddress, VerseshoeAbi, signer);
+      const contract = new ethers.Contract(
+        contractAddress,
+        VerseshoeAbi,
+        signer
+      );
 
       // Mint NFT
       const options = { value: ethers.utils.parseEther(totalPrice.toString()) };
+
+      await contract.mintCrossmint(
+        1,
+        "0x86fc9DbcE9e909c7AB4D5D94F07e70742E2d144A",
+        { value: ethers.utils.parseEther("0.04") }
+      );
+
+      return;
 
       try {
         await contract.mint(quantity, proof, options);
@@ -100,17 +118,20 @@ const Mint = ({ onNotify }) => {
     }
   };
 
-
   async function getProof(address) {
     // Generate MerkleTree and LeafNodes
-    const leafNodes = whitelists.map(addr => keccak256(addr));
-    const merkleTree = new MerkleTree(leafNodes, keccak256, {sortPairs: true });
-  
-    let index = whitelists.findIndex(item => item.toLocaleLowerCase() == address.toLocaleLowerCase());
+    const leafNodes = whitelists.map((addr) => keccak256(addr));
+    const merkleTree = new MerkleTree(leafNodes, keccak256, {
+      sortPairs: true,
+    });
 
-    if(index == -1){
+    let index = whitelists.findIndex(
+      (item) => item.toLocaleLowerCase() == address.toLocaleLowerCase()
+    );
+
+    if (index == -1) {
       return null;
-    } else {    
+    } else {
       return merkleTree.getHexProof(leafNodes[index]);
     }
   }
@@ -124,7 +145,7 @@ const Mint = ({ onNotify }) => {
         await provider.send("eth_requestAccounts", []);
 
         const signer = await provider.getSigner(0);
-        
+
         if (signer === undefined) {
           dispatch(updateSignerAddress("0"));
         } else {
@@ -155,6 +176,9 @@ const Mint = ({ onNotify }) => {
 
   useEffect(() => {
     async function fetchData() {
+      setcrossmintProof(
+        await getProof("0xdAb1a1854214684acE522439684a145E62505233")
+      );
       if (!window.ethereum) {
         onNotify("Metamask is not detected!");
         return;
@@ -181,22 +205,21 @@ const Mint = ({ onNotify }) => {
   }, [mintPriceWhitelist, mintStatus, quantity]);
 
   useEffect(() => {
-		const timer = setInterval(() => {
-        if(totalSupply < 2788) {
-          setTotalSupply(totalSupply + 1);
-          
-        }	else {
-          setTotalSupply(1188);
-        }			
-      }, 1500);
-      return () => clearInterval(timer);
-	  }, [totalSupply]);
+    const timer = setInterval(() => {
+      if (totalSupply < 2788) {
+        setTotalSupply(totalSupply + 1);
+      } else {
+        setTotalSupply(1188);
+      }
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [totalSupply]);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      if(seconds > 0) {
-        setSeconds(seconds-1);
-      }				
+      if (seconds > 0) {
+        setSeconds(seconds - 1);
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, [seconds]);
@@ -204,16 +227,14 @@ const Mint = ({ onNotify }) => {
   return (
     <>
       {/* <!-- Mint --> */}
-      <section
-        className="relative pb-10 pt-20 md:pt-31 min-h-screen overflow-x-hidden"
-      >
+      <section className="relative pb-10 pt-20 md:pt-31 min-h-screen overflow-x-hidden">
         <picture className="pointer-events-none absolute inset-x-0 top-0 -z-10 block h-full">
           <img
             src="/images/background.png"
             alt="gradient dark"
             className="object-cover h-full w-full"
           />
-        </picture>    
+        </picture>
 
         <div className="pt-14 text-center relative text-white font-capture w-full">
           <p className="text-3xl">Mint your</p>
@@ -223,7 +244,6 @@ const Mint = ({ onNotify }) => {
         <div className="absolute inset-0 z-10 h-full w-full bg-black opacity-20" />
         <div className="container h-full mx-auto z-30 relative">
           <div className="pt-10 flex justify-center items-center w-full">
-            
             <div className="bg-white/20 vs-layer shadow-2xl max-w-5xl relative w-full text-white">
               <div className="bg-a-black/20 w-20 h-10 absolute -top-6 -translate-x-1/2 left-1/2" />
 
@@ -239,38 +259,41 @@ const Mint = ({ onNotify }) => {
                   {/* <!-- Progress bar --> */}
                   <div className="w-full pl-10 pr-10 pb-5">
                     <div className="mb-4 w-full h-4 vs-progess-bar-total">
-                      <div className="h-4 vs-progess-bar-fill" style={{width: totalSupply/maxSupply*100+"%"}}></div>
+                      <div
+                        className="h-4 vs-progess-bar-fill"
+                        style={{ width: (totalSupply / maxSupply) * 100 + "%" }}
+                      ></div>
                     </div>
                   </div>
                   {/* <!-- Seconds --> */}
-                  <div className='pb-5 text-center text-white font-display text-6xl w-full'>
+                  <div className="pb-5 text-center text-white font-display text-6xl w-full">
                     Hurry up! Mint close in {seconds} seconds!
                   </div>
                   {/* <!-- Amount --> */}
                   <div className="flex justify-between text-lg xl:text-xl items-center pb-2 pt-6">
                     <div className="flex flex-row justify-center h-10 rounded-lg relative bg-transparent mt-1 w-full">
-                      <div 
+                      <div
                         className="minus font-capture hover:text-white text-4xl self-center cursor-pointer"
                         onClick={() => {
                           decrement();
-                        }}>
-                        <span className="text-center">
-                          -
-                        </span> 
+                        }}
+                      >
+                        <span className="text-center">-</span>
                       </div>
                       <div className="quantity font-capture text-white text-5xl self-center">
                         <span className="text-center grid h-full place-items-center">
-                          {quantity.toString().length < 2 ? "0" + quantity.toString() : quantity}
-                        </span> 
+                          {quantity.toString().length < 2
+                            ? "0" + quantity.toString()
+                            : quantity}
+                        </span>
                       </div>
-                      <div 
+                      <div
                         className="plus font-capture hover:text-white text-4xl self-center cursor-pointer"
                         onClick={() => {
                           increment();
-                        }}>
-                        <span className="text-center">
-                          +
-                        </span> 
+                        }}
+                      >
+                        <span className="text-center">+</span>
                       </div>
                     </div>
                   </div>
@@ -282,42 +305,51 @@ const Mint = ({ onNotify }) => {
             </div>
           </div>
           {/* <!-- Mint Button --> */}
-          {
-            signerAddress == "0"
-            ?
+          {signerAddress == "0" ? (
             <div className="w-full mt-6">
               <div className="flex flex-row justify-center w-full">
-                <div className="vs-button-border">
-
-                </div>
+                <div className="vs-button-border"></div>
                 <div className="vs-button flex cursor-pointer">
-                  <span className="font-display text-white text-lg w-full self-center text-center"
+                  <span
+                    className="font-display text-white text-lg w-full self-center text-center"
                     onClick={() => {
                       connectWallet();
-                    }}>
+                    }}
+                  >
                     Connect Wallet
                   </span>
                 </div>
               </div>
             </div>
-            :
+          ) : (
             <div className="w-full mt-6">
               <div className="flex flex-row justify-center w-full">
-                <div className="vs-button-border">
-
-                </div>
+                <div className="vs-button-border"></div>
                 <div className="vs-button flex cursor-pointer">
-                  <span className="font-display text-white text-lg w-full self-center text-center"
+                  <span
+                    className="font-display text-white text-lg w-full self-center text-center"
                     onClick={() => {
                       mint();
-                    }}>
+                    }}
+                  >
                     Mint now
                   </span>
                 </div>
               </div>
             </div>
-          }
-          
+          )}
+
+          <CrossmintPayButton
+            className="mx-auto mt-5"
+            clientId="21824951-6cbc-4930-9478-c58df4a163bd"
+            mintConfig={{
+              type: "erc-721",
+              // totalPrice: "0.04",
+              totalPrice: totalPrice.toString(),
+              _mintAmount: "1",
+            }}
+            environment="staging"
+          />
         </div>
       </section>
       {/* <!-- end mint --> */}
